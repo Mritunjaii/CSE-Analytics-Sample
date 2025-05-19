@@ -36,6 +36,8 @@ export default function Dashboard() {
   const [patentStatus, setPatentStatus] = useState("all")
   const [selectedFaculty, setSelectedFaculty] = useState<number | null>(null)
   const [publicationType, setPublicationType] = useState("all")
+  const [indexingType, setIndexingType] = useState("all")
+  const [eventType, setEventType] = useState("all")
 
   // Find min and max funding values for the slider
   const minFunding = Math.min(...projectsData.map((project) => project.funding))
@@ -48,9 +50,10 @@ export default function Dashboard() {
       const yearMatch = item.year >= startYear && item.year <= endYear
       const facultyMatch = selectedFaculty ? item.facultyIds.includes(selectedFaculty) : true
       const typeMatch = publicationType === "all" ? true : item.type === publicationType
-      return yearMatch && facultyMatch && typeMatch
+      const indexingMatch = indexingType === "all" || item.type !== "journal" ? true : item.indexing === indexingType
+      return yearMatch && facultyMatch && typeMatch && indexingMatch
     })
-  }, [startYear, endYear, selectedFaculty, publicationType])
+  }, [startYear, endYear, selectedFaculty, publicationType, indexingType])
 
   const filteredProjects = useMemo(() => {
     return projectsData.filter((item) => {
@@ -75,12 +78,16 @@ export default function Dashboard() {
     return eventsData.filter((item) => {
       const yearMatch = item.year >= startYear && item.year <= endYear
       const facultyMatch = selectedFaculty ? item.facultyIds.includes(selectedFaculty) : true
-      return yearMatch && facultyMatch
+      const typeMatch = eventType === "all" ? true : item.type === eventType
+      return yearMatch && facultyMatch && typeMatch
     })
-  }, [startYear, endYear, selectedFaculty])
+  }, [startYear, endYear, selectedFaculty, eventType])
 
   // Get faculty name for display
   const facultyName = selectedFaculty ? facultyData.find((f) => f.id === selectedFaculty)?.name : "All Faculty"
+
+  // Show indexing filter only when journal is selected
+  const showIndexingFilter = publicationType === "journal"
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -156,7 +163,13 @@ export default function Dashboard() {
                     <ToggleGroup
                       type="single"
                       value={publicationType}
-                      onValueChange={(value) => value && setPublicationType(value)}
+                      onValueChange={(value) => {
+                        if (value) {
+                          setPublicationType(value)
+                          // Reset indexing type when changing publication type
+                          setIndexingType("all")
+                        }
+                      }}
                     >
                       <ToggleGroupItem value="all" aria-label="All publications">
                         All
@@ -172,6 +185,58 @@ export default function Dashboard() {
                       </ToggleGroupItem>
                       <ToggleGroupItem value="bookChapter" aria-label="Book chapter publications">
                         Chapter
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+
+                    {showIndexingFilter && (
+                      <div className="mt-2">
+                        <h2 className="text-sm font-medium mb-2 text-gray-500 dark:text-gray-400">Journal Indexing</h2>
+                        <ToggleGroup
+                          type="single"
+                          value={indexingType}
+                          onValueChange={(value) => value && setIndexingType(value)}
+                        >
+                          <ToggleGroupItem value="all" aria-label="All indexing">
+                            All
+                          </ToggleGroupItem>
+                          <ToggleGroupItem value="sci" aria-label="SCI(E) indexed">
+                            SCI(E)
+                          </ToggleGroupItem>
+                          <ToggleGroupItem value="scopus" aria-label="Scopus indexed">
+                            Scopus
+                          </ToggleGroupItem>
+                          <ToggleGroupItem value="esci" aria-label="ESCI indexed">
+                            ESCI
+                          </ToggleGroupItem>
+                          <ToggleGroupItem value="other" aria-label="Other indexing">
+                            Other
+                          </ToggleGroupItem>
+                        </ToggleGroup>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <h2 className="text-sm font-medium mb-2 text-gray-500 dark:text-gray-400">Event Type</h2>
+                    <ToggleGroup
+                      type="single"
+                      value={eventType}
+                      onValueChange={(value) => value && setEventType(value)}
+                    >
+                      <ToggleGroupItem value="all" aria-label="All events">
+                        All
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="conference" aria-label="Conference events">
+                        Conf.
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="stc" aria-label="STC/E-STC events">
+                        STC
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="workshop" aria-label="Workshop/FDP events">
+                        Workshop
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="gian" aria-label="GIAN events">
+                        GIAN
                       </ToggleGroupItem>
                     </ToggleGroup>
                   </div>
@@ -246,13 +311,21 @@ export default function Dashboard() {
               <CardTitle>{selectedFaculty ? `${facultyName}'s Publications` : "Research Publications"}</CardTitle>
             </CardHeader>
             <CardContent>
-              <PublicationsChart data={filteredPublications} />
+              <PublicationsChart
+                data={filteredPublications}
+                publicationType={publicationType}
+                indexingType={indexingType}
+              />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle>{selectedFaculty ? `${facultyName}'s Projects` : "Research Projects"}</CardTitle>
+              <CardTitle>
+                {selectedFaculty
+                  ? `${facultyName}'s Consultancies/Research Projects`
+                  : "Consultancies/Research Projects"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ProjectsChart data={filteredProjects} />
@@ -273,7 +346,7 @@ export default function Dashboard() {
               <CardTitle>{selectedFaculty ? `${facultyName}'s Events` : "Faculty Events"}</CardTitle>
             </CardHeader>
             <CardContent>
-              <EventsChart data={filteredEvents} />
+              <EventsChart data={filteredEvents} eventType={eventType} />
             </CardContent>
           </Card>
         </div>

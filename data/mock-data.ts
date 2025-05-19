@@ -10,33 +10,60 @@ export const facultyData = [
   { id: 8, name: "Dr. Priyanka" },
 ]
 
-// Publications data with faculty and type
+// Publications data with faculty, type and indexing
 export const publicationsData = [
-  { year: 2018, count: 15, facultyIds: [1, 2], type: "journal" },
+  { year: 2018, count: 8, facultyIds: [1, 2], type: "journal", indexing: "sci" },
+  { year: 2018, count: 4, facultyIds: [3, 4], type: "journal", indexing: "scopus" },
+  { year: 2018, count: 2, facultyIds: [5, 6], type: "journal", indexing: "esci" },
+  { year: 2018, count: 1, facultyIds: [7, 8], type: "journal", indexing: "other" },
   { year: 2018, count: 18, facultyIds: [3, 4], type: "conference" },
   { year: 2018, count: 5, facultyIds: [5, 6], type: "book" },
   { year: 2018, count: 4, facultyIds: [7, 8], type: "bookChapter" },
-  { year: 2019, count: 20, facultyIds: [1, 3], type: "journal" },
+
+  { year: 2019, count: 10, facultyIds: [1, 3], type: "journal", indexing: "sci" },
+  { year: 2019, count: 6, facultyIds: [2, 4], type: "journal", indexing: "scopus" },
+  { year: 2019, count: 3, facultyIds: [5, 7], type: "journal", indexing: "esci" },
+  { year: 2019, count: 1, facultyIds: [6, 8], type: "journal", indexing: "other" },
   { year: 2019, count: 22, facultyIds: [2, 4], type: "conference" },
   { year: 2019, count: 7, facultyIds: [5, 7], type: "book" },
   { year: 2019, count: 7, facultyIds: [6, 8], type: "bookChapter" },
-  { year: 2020, count: 16, facultyIds: [1, 5], type: "journal" },
+
+  { year: 2020, count: 9, facultyIds: [1, 5], type: "journal", indexing: "sci" },
+  { year: 2020, count: 5, facultyIds: [2, 6], type: "journal", indexing: "scopus" },
+  { year: 2020, count: 1, facultyIds: [3, 7], type: "journal", indexing: "esci" },
+  { year: 2020, count: 1, facultyIds: [4, 8], type: "journal", indexing: "other" },
   { year: 2020, count: 19, facultyIds: [2, 6], type: "conference" },
   { year: 2020, count: 6, facultyIds: [3, 7], type: "book" },
   { year: 2020, count: 7, facultyIds: [4, 8], type: "bookChapter" },
-  { year: 2021, count: 22, facultyIds: [1, 6], type: "journal" },
+
+  { year: 2021, count: 12, facultyIds: [1, 6], type: "journal", indexing: "sci" },
+  { year: 2021, count: 7, facultyIds: [2, 7], type: "journal", indexing: "scopus" },
+  { year: 2021, count: 2, facultyIds: [3, 8], type: "journal", indexing: "esci" },
+  { year: 2021, count: 1, facultyIds: [4, 5], type: "journal", indexing: "other" },
   { year: 2021, count: 25, facultyIds: [2, 7], type: "conference" },
   { year: 2021, count: 8, facultyIds: [3, 8], type: "book" },
   { year: 2021, count: 10, facultyIds: [4, 5], type: "bookChapter" },
-  { year: 2022, count: 25, facultyIds: [1, 7], type: "journal" },
+
+  { year: 2022, count: 14, facultyIds: [1, 7], type: "journal", indexing: "sci" },
+  { year: 2022, count: 8, facultyIds: [2, 8], type: "journal", indexing: "scopus" },
+  { year: 2022, count: 2, facultyIds: [3, 5], type: "journal", indexing: "esci" },
+  { year: 2022, count: 1, facultyIds: [4, 6], type: "journal", indexing: "other" },
   { year: 2022, count: 28, facultyIds: [2, 8], type: "conference" },
   { year: 2022, count: 9, facultyIds: [3, 5], type: "book" },
   { year: 2022, count: 10, facultyIds: [4, 6], type: "bookChapter" },
-  { year: 2023, count: 30, facultyIds: [1, 8], type: "journal" },
+
+  { year: 2023, count: 16, facultyIds: [1, 8], type: "journal", indexing: "sci" },
+  { year: 2023, count: 10, facultyIds: [2, 5], type: "journal", indexing: "scopus" },
+  { year: 2023, count: 3, facultyIds: [3, 6], type: "journal", indexing: "esci" },
+  { year: 2023, count: 1, facultyIds: [4, 7], type: "journal", indexing: "other" },
   { year: 2023, count: 32, facultyIds: [2, 5], type: "conference" },
   { year: 2023, count: 11, facultyIds: [3, 6], type: "book" },
   { year: 2023, count: 12, facultyIds: [4, 7], type: "bookChapter" },
-  { year: 2024, count: 32, facultyIds: [1, 2], type: "journal" },
+
+  { year: 2024, count: 18, facultyIds: [1, 2], type: "journal", indexing: "sci" },
+  { year: 2024, count: 10, facultyIds: [3, 4], type: "journal", indexing: "scopus" },
+  { year: 2024, count: 3, facultyIds: [5, 6], type: "journal", indexing: "esci" },
+  { year: 2024, count: 1, facultyIds: [7, 8], type: "journal", indexing: "other" },
   { year: 2024, count: 34, facultyIds: [3, 4], type: "conference" },
   { year: 2024, count: 12, facultyIds: [5, 6], type: "book" },
   { year: 2024, count: 14, facultyIds: [7, 8], type: "bookChapter" },
@@ -151,14 +178,40 @@ export const patentsData = [
   { year: 2023, status: "granted", id: 44, facultyIds: [1, 2] },
 ]
 
-// Events data with faculty organizers
+// Events data with faculty organizers and event type
 export const eventsData = [
-  { year: 2018, count: 12, facultyIds: [1, 2, 3] },
-  { year: 2019, count: 15, facultyIds: [4, 5, 6] },
-  { year: 2020, count: 8, facultyIds: [7, 8, 1] },
-  { year: 2021, count: 18, facultyIds: [2, 3, 4] },
-  { year: 2022, count: 22, facultyIds: [5, 6, 7] },
-  { year: 2023, count: 25, facultyIds: [8, 1, 2] },
-  { year: 2024, count: 26, facultyIds: [3, 4, 5] },
-  { year: 2025, count: 28, facultyIds: [6, 7, 8] },
+  { year: 2018, count: 3, facultyIds: [1, 2], type: "conference" },
+  { year: 2018, count: 4, facultyIds: [3, 4], type: "stc" },
+  { year: 2018, count: 3, facultyIds: [5, 6], type: "workshop" },
+  { year: 2018, count: 2, facultyIds: [7, 8], type: "gian" },
+
+  { year: 2019, count: 4, facultyIds: [1, 3], type: "conference" },
+  { year: 2019, count: 5, facultyIds: [2, 4], type: "stc" },
+  { year: 2019, count: 4, facultyIds: [5, 7], type: "workshop" },
+  { year: 2019, count: 2, facultyIds: [6, 8], type: "gian" },
+
+  { year: 2020, count: 2, facultyIds: [1, 5], type: "conference" },
+  { year: 2020, count: 3, facultyIds: [2, 6], type: "stc" },
+  { year: 2020, count: 2, facultyIds: [3, 7], type: "workshop" },
+  { year: 2020, count: 1, facultyIds: [4, 8], type: "gian" },
+
+  { year: 2021, count: 5, facultyIds: [1, 6], type: "conference" },
+  { year: 2021, count: 6, facultyIds: [2, 7], type: "stc" },
+  { year: 2021, count: 5, facultyIds: [3, 8], type: "workshop" },
+  { year: 2021, count: 2, facultyIds: [4, 5], type: "gian" },
+
+  { year: 2022, count: 6, facultyIds: [1, 7], type: "conference" },
+  { year: 2022, count: 7, facultyIds: [2, 8], type: "stc" },
+  { year: 2022, count: 6, facultyIds: [3, 5], type: "workshop" },
+  { year: 2022, count: 3, facultyIds: [4, 6], type: "gian" },
+
+  { year: 2023, count: 7, facultyIds: [1, 8], type: "conference" },
+  { year: 2023, count: 8, facultyIds: [2, 5], type: "stc" },
+  { year: 2023, count: 7, facultyIds: [3, 6], type: "workshop" },
+  { year: 2023, count: 3, facultyIds: [4, 7], type: "gian" },
+
+  { year: 2024, count: 8, facultyIds: [1, 2], type: "conference" },
+  { year: 2024, count: 9, facultyIds: [3, 4], type: "stc" },
+  { year: 2024, count: 6, facultyIds: [5, 6], type: "workshop" },
+  { year: 2024, count: 3, facultyIds: [7, 8], type: "gian" },
 ]
