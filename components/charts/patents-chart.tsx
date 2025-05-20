@@ -15,8 +15,8 @@ import {
   LabelList,
   Legend,
   ResponsiveContainer,
+  Tooltip,
 } from "recharts"
-import { ChartTooltip } from "@/components/ui/chart"
 import { type ChartType, ChartTypeSelector } from "../chart-type-selector"
 
 interface Patent {
@@ -28,12 +28,22 @@ interface Patent {
 
 interface PatentsChartProps {
   data: Patent[]
+  patentStatus: string
 }
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82CA9D"]
 
-export default function PatentsChart({ data }: PatentsChartProps) {
+// Define colors for patent statuses
+const STATUS_COLORS = {
+  filed: "#e8c468",
+  granted: "#f4a462",
+}
+
+export default function PatentsChart({ data, patentStatus }: PatentsChartProps) {
   const [chartType, setChartType] = useState<ChartType>("bar")
+
+  // Determine if we should show all statuses or just one
+  const shouldShowAllStatuses = patentStatus === "all"
 
   // Aggregate data by year
   const aggregatedData = data.reduce(
@@ -60,11 +70,18 @@ export default function PatentsChart({ data }: PatentsChartProps) {
   // Sort by year
   aggregatedData.sort((a, b) => a.year - b.year)
 
-  // For pie chart, we need different data structure
-  const pieData = [
-    { name: "Filed", value: data.filter((item) => item.status === "filed").length },
-    { name: "Granted", value: data.filter((item) => item.status === "granted").length },
-  ]
+  // For pie chart, create appropriate data structure
+  const pieData = shouldShowAllStatuses
+    ? [
+        { name: "Filed", value: data.filter((item) => item.status === "filed").length },
+        { name: "Granted", value: data.filter((item) => item.status === "granted").length },
+      ]
+    : aggregatedData
+        .map((item) => ({
+          name: item.year.toString(),
+          value: patentStatus === "filed" ? item.filed : item.granted,
+        }))
+        .filter((item) => item.value > 0)
 
   // If no data, show a message
   if (data.length === 0) {
@@ -75,8 +92,21 @@ export default function PatentsChart({ data }: PatentsChartProps) {
     )
   }
 
+  // Get patent status title
+  const getPatentStatusTitle = () => {
+    switch (patentStatus) {
+      case "filed":
+        return "Filed Patents"
+      case "granted":
+        return "Granted Patents"
+      default:
+        return "All Patents"
+    }
+  }
+
   return (
     <div>
+      <h3 className="text-sm font-medium mb-2 text-gray-700">{getPatentStatusTitle()}</h3>
       <ChartTypeSelector value={chartType} onValueChange={setChartType} />
       <div className="h-[300px] w-full">
         {chartType === "bar" && (
@@ -93,14 +123,29 @@ export default function PatentsChart({ data }: PatentsChartProps) {
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="year" />
               <YAxis />
-              <ChartTooltip />
+              <Tooltip />
               <Legend />
-              <Bar dataKey="filed" name="Filed" fill="#e8c468" radius={[4, 4, 0, 0]} barSize={20}>
-                <LabelList dataKey="filed" position="center" fill="#fff" />
-              </Bar>
-              <Bar dataKey="granted" name="Granted" fill="#f4a462" radius={[4, 4, 0, 0]} barSize={20}>
-                <LabelList dataKey="granted" position="center" fill="#fff" />
-              </Bar>
+
+              {shouldShowAllStatuses ? (
+                // Show all patent statuses
+                <>
+                  <Bar dataKey="filed" name="Filed" fill={STATUS_COLORS.filed} radius={[4, 4, 0, 0]} barSize={20}>
+                    <LabelList dataKey="filed" position="center" fill="#fff" />
+                  </Bar>
+                  <Bar dataKey="granted" name="Granted" fill={STATUS_COLORS.granted} radius={[4, 4, 0, 0]} barSize={20}>
+                    <LabelList dataKey="granted" position="center" fill="#fff" />
+                  </Bar>
+                </>
+              ) : // Show only the selected status
+              patentStatus === "filed" ? (
+                <Bar dataKey="filed" name="Filed" fill={STATUS_COLORS.filed} radius={[4, 4, 0, 0]} barSize={20}>
+                  <LabelList dataKey="filed" position="center" fill="#fff" />
+                </Bar>
+              ) : (
+                <Bar dataKey="granted" name="Granted" fill={STATUS_COLORS.granted} radius={[4, 4, 0, 0]} barSize={20}>
+                  <LabelList dataKey="granted" position="center" fill="#fff" />
+                </Bar>
+              )}
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -118,12 +163,21 @@ export default function PatentsChart({ data }: PatentsChartProps) {
                 fill="#8884d8"
                 dataKey="value"
               >
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
+                {pieData.map((entry, index) => {
+                  let color
+                  if (shouldShowAllStatuses) {
+                    // Use status colors
+                    if (entry.name === "Filed") color = STATUS_COLORS.filed
+                    else if (entry.name === "Granted") color = STATUS_COLORS.granted
+                  } else {
+                    // Use a single color based on status
+                    color = STATUS_COLORS[patentStatus]
+                  }
+                  return <Cell key={`cell-${index}`} fill={color || COLORS[index % COLORS.length]} />
+                })}
               </Pie>
               <Legend />
-              <ChartTooltip />
+              <Tooltip />
             </PieChart>
           </ResponsiveContainer>
         )}
@@ -142,26 +196,53 @@ export default function PatentsChart({ data }: PatentsChartProps) {
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="year" />
               <YAxis />
-              <ChartTooltip />
+              <Tooltip />
               <Legend />
-              <Line
-                type="monotone"
-                dataKey="filed"
-                name="Filed"
-                stroke="#e8c468"
-                strokeWidth={2}
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="granted"
-                name="Granted"
-                stroke="#f4a462"
-                strokeWidth={2}
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
-              />
+
+              {shouldShowAllStatuses ? (
+                // Show all patent statuses
+                <>
+                  <Line
+                    type="monotone"
+                    dataKey="filed"
+                    name="Filed"
+                    stroke={STATUS_COLORS.filed}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="granted"
+                    name="Granted"
+                    stroke={STATUS_COLORS.granted}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </>
+              ) : // Show only the selected status
+              patentStatus === "filed" ? (
+                <Line
+                  type="monotone"
+                  dataKey="filed"
+                  name="Filed"
+                  stroke={STATUS_COLORS.filed}
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              ) : (
+                <Line
+                  type="monotone"
+                  dataKey="granted"
+                  name="Granted"
+                  stroke={STATUS_COLORS.granted}
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              )}
             </LineChart>
           </ResponsiveContainer>
         )}

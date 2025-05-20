@@ -15,8 +15,8 @@ import {
   LabelList,
   Legend,
   ResponsiveContainer,
+  Tooltip,
 } from "recharts"
-import { ChartTooltip } from "@/components/ui/chart"
 import { type ChartType, ChartTypeSelector } from "../chart-type-selector"
 
 interface Publication {
@@ -24,167 +24,166 @@ interface Publication {
   count: number
   facultyIds: number[]
   type: string
-  indexing?: string
+  indexing: string
 }
 
 interface PublicationsChartProps {
   data: Publication[]
   publicationType: string
-  indexingType: string
 }
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82CA9D"]
 
-export default function PublicationsChart({ data, publicationType, indexingType }: PublicationsChartProps) {
+// Define colors for different types of publications
+const TYPE_COLORS = {
+  journal: "#e76e50",
+  conference: "#2a9d90",
+  book: "#274754",
+  bookChapter: "#e8c468",
+}
+
+// Define colors for different indexing types
+const INDEXING_COLORS = {
+  sci: "#4287f5",
+  scopus: "#42f5a7",
+  esci: "#f542a1",
+  other: "#f5d442",
+}
+
+export default function PublicationsChart({ data, publicationType }: PublicationsChartProps) {
   const [chartType, setChartType] = useState<ChartType>("bar")
 
-  // Filter data based on publication type and indexing
-  let filteredData = data
-
-  if (publicationType !== "all") {
-    filteredData = data.filter((item) => item.type === publicationType)
-
-    // If journal is selected and indexing is specified
-    if (publicationType === "journal" && indexingType !== "all") {
-      filteredData = filteredData.filter((item) => item.indexing === indexingType)
-    }
-  }
+  // Determine if we should aggregate by type or by indexing
+  const shouldShowByType = publicationType === "all"
+  const shouldShowByIndexing = publicationType !== "all"
 
   // Aggregate data by year and publication type or indexing
-  const aggregatedData = filteredData.reduce((acc, item) => {
-    const existingItem = acc.find((i) => i.year === item.year)
-
-    if (existingItem) {
-      // If we're showing journal with indexing
-      if (publicationType === "journal" && indexingType === "all") {
-        if (item.indexing === "sci") {
-          existingItem.sci += item.count
-        } else if (item.indexing === "scopus") {
-          existingItem.scopus += item.count
-        } else if (item.indexing === "esci") {
-          existingItem.esci += item.count
-        } else if (item.indexing === "other") {
-          existingItem.other += item.count
+  const aggregatedData = data.reduce(
+    (acc, item) => {
+      const existingItem = acc.find((i) => i.year === item.year)
+      if (existingItem) {
+        if (shouldShowByType) {
+          // Aggregate by publication type when showing all types
+          if (item.type === "journal") {
+            existingItem.journal += item.count
+          } else if (item.type === "conference") {
+            existingItem.conference += item.count
+          } else if (item.type === "book") {
+            existingItem.book += item.count
+          } else if (item.type === "bookChapter") {
+            existingItem.bookChapter += item.count
+          }
+        } else {
+          // Aggregate by indexing when a specific type is selected
+          if (item.indexing === "sci") {
+            existingItem.sci += item.count
+          } else if (item.indexing === "scopus") {
+            existingItem.scopus += item.count
+          } else if (item.indexing === "esci") {
+            existingItem.esci += item.count
+          } else if (item.indexing === "other") {
+            existingItem.other += item.count
+          }
         }
-      }
-      // If we're showing all publication types
-      else if (publicationType === "all") {
-        if (item.type === "journal") {
-          existingItem.journal += item.count
-        } else if (item.type === "conference") {
-          existingItem.conference += item.count
-        } else if (item.type === "book") {
-          existingItem.book += item.count
-        } else if (item.type === "bookChapter") {
-          existingItem.bookChapter += item.count
-        }
-      }
-      // If we're showing a specific publication type or journal indexing
-      else {
-        existingItem.count += item.count
-      }
-
-      existingItem.total += item.count
-    } else {
-      // Create a new entry with default values
-      const newItem: any = {
-        year: item.year,
-        journal: 0,
-        conference: 0,
-        book: 0,
-        bookChapter: 0,
-        sci: 0,
-        scopus: 0,
-        esci: 0,
-        other: 0,
-        count: 0,
-        total: item.count,
-      }
-
-      // Set the appropriate value based on the type or indexing
-      if (publicationType === "journal" && indexingType === "all") {
-        if (item.indexing === "sci") {
-          newItem.sci = item.count
-        } else if (item.indexing === "scopus") {
-          newItem.scopus = item.count
-        } else if (item.indexing === "esci") {
-          newItem.esci = item.count
-        } else if (item.indexing === "other") {
-          newItem.other = item.count
-        }
-      } else if (publicationType === "all") {
-        if (item.type === "journal") {
-          newItem.journal = item.count
-        } else if (item.type === "conference") {
-          newItem.conference = item.count
-        } else if (item.type === "book") {
-          newItem.book = item.count
-        } else if (item.type === "bookChapter") {
-          newItem.bookChapter = item.count
-        }
+        existingItem.total += item.count
       } else {
-        newItem.count = item.count
+        if (shouldShowByType) {
+          acc.push({
+            year: item.year,
+            journal: item.type === "journal" ? item.count : 0,
+            conference: item.type === "conference" ? item.count : 0,
+            book: item.type === "book" ? item.count : 0,
+            bookChapter: item.type === "bookChapter" ? item.count : 0,
+            total: item.count,
+            // Add zero values for indexing to avoid errors
+            sci: 0,
+            scopus: 0,
+            esci: 0,
+            other: 0,
+          })
+        } else {
+          acc.push({
+            year: item.year,
+            sci: item.indexing === "sci" ? item.count : 0,
+            scopus: item.indexing === "scopus" ? item.count : 0,
+            esci: item.indexing === "esci" ? item.count : 0,
+            other: item.indexing === "other" ? item.count : 0,
+            total: item.count,
+            // Add zero values for types to avoid errors
+            journal: 0,
+            conference: 0,
+            book: 0,
+            bookChapter: 0,
+          })
+        }
       }
-
-      acc.push(newItem)
-    }
-    return acc
-  }, [] as any[])
+      return acc
+    },
+    [] as {
+      year: number
+      journal: number
+      conference: number
+      book: number
+      bookChapter: number
+      sci: number
+      scopus: number
+      esci: number
+      other: number
+      total: number
+    }[],
+  )
 
   // Sort by year
   aggregatedData.sort((a, b) => a.year - b.year)
 
-  // For pie chart, we need to transform the data
+  // For pie chart, we need to transform the data based on what we're showing
   let pieData = []
 
-  if (publicationType === "journal" && indexingType === "all") {
-    pieData = [
-      {
-        name: "SCI(E)",
-        value: filteredData.filter((item) => item.indexing === "sci").reduce((sum, item) => sum + item.count, 0),
-      },
-      {
-        name: "Scopus",
-        value: filteredData.filter((item) => item.indexing === "scopus").reduce((sum, item) => sum + item.count, 0),
-      },
-      {
-        name: "ESCI",
-        value: filteredData.filter((item) => item.indexing === "esci").reduce((sum, item) => sum + item.count, 0),
-      },
-      {
-        name: "Other",
-        value: filteredData.filter((item) => item.indexing === "other").reduce((sum, item) => sum + item.count, 0),
-      },
-    ]
-  } else if (publicationType === "all") {
+  if (shouldShowByType) {
     pieData = [
       {
         name: "Journal",
-        value: filteredData.filter((item) => item.type === "journal").reduce((sum, item) => sum + item.count, 0),
+        value: data.filter((item) => item.type === "journal").reduce((sum, item) => sum + item.count, 0),
       },
       {
         name: "Conference",
-        value: filteredData.filter((item) => item.type === "conference").reduce((sum, item) => sum + item.count, 0),
+        value: data.filter((item) => item.type === "conference").reduce((sum, item) => sum + item.count, 0),
       },
       {
         name: "Book",
-        value: filteredData.filter((item) => item.type === "book").reduce((sum, item) => sum + item.count, 0),
+        value: data.filter((item) => item.type === "book").reduce((sum, item) => sum + item.count, 0),
       },
       {
         name: "Book Chapter",
-        value: filteredData.filter((item) => item.type === "bookChapter").reduce((sum, item) => sum + item.count, 0),
+        value: data.filter((item) => item.type === "bookChapter").reduce((sum, item) => sum + item.count, 0),
       },
     ]
   } else {
-    // For specific publication type or indexing
-    pieData = aggregatedData.map((item) => ({
-      name: `${item.year}`,
-      value: item.count || item.total,
-    }))
+    pieData = [
+      {
+        name: "SCI(E)",
+        value: data.filter((item) => item.indexing === "sci").reduce((sum, item) => sum + item.count, 0),
+      },
+      {
+        name: "Scopus",
+        value: data.filter((item) => item.indexing === "scopus").reduce((sum, item) => sum + item.count, 0),
+      },
+      {
+        name: "ESCI",
+        value: data.filter((item) => item.indexing === "esci").reduce((sum, item) => sum + item.count, 0),
+      },
+      {
+        name: "Other",
+        value: data.filter((item) => item.indexing === "other").reduce((sum, item) => sum + item.count, 0),
+      },
+    ]
   }
 
+  // Filter out zero values from pieData
+  pieData = pieData.filter((item) => item.value > 0)
+
   // If no data, show a message
-  if (filteredData.length === 0) {
+  if (data.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-gray-500">No data available for the selected filters.</p>
@@ -192,31 +191,25 @@ export default function PublicationsChart({ data, publicationType, indexingType 
     )
   }
 
-  // Determine which data keys to show based on filters
-  const getBarDataKeys = () => {
-    if (publicationType === "journal" && indexingType === "all") {
-      return [
-        { dataKey: "sci", name: "SCI(E)", color: "#e76e50" },
-        { dataKey: "scopus", name: "Scopus", color: "#2a9d90" },
-        { dataKey: "esci", name: "ESCI", color: "#274754" },
-        { dataKey: "other", name: "Other", color: "#e8c468" },
-      ]
-    } else if (publicationType === "all") {
-      return [
-        { dataKey: "journal", name: "Journal", color: "#e76e50" },
-        { dataKey: "conference", name: "Conference", color: "#2a9d90" },
-        { dataKey: "book", name: "Book", color: "#274754" },
-        { dataKey: "bookChapter", name: "Book Chapter", color: "#e8c468" },
-      ]
-    } else {
-      return [{ dataKey: "count", name: publicationType, color: "#e76e50" }]
+  // Get publication type title
+  const getPublicationTypeTitle = () => {
+    switch (publicationType) {
+      case "journal":
+        return "Journal Publications"
+      case "conference":
+        return "Conference Publications"
+      case "book":
+        return "Book Publications"
+      case "bookChapter":
+        return "Book Chapter Publications"
+      default:
+        return "All Publications"
     }
   }
 
-  const barDataKeys = getBarDataKeys()
-
   return (
     <div>
+      <h3 className="text-sm font-medium mb-2 text-gray-700">{getPublicationTypeTitle()}</h3>
       <ChartTypeSelector value={chartType} onValueChange={setChartType} />
       <div className="h-[300px] w-full">
         {chartType === "bar" && (
@@ -233,20 +226,54 @@ export default function PublicationsChart({ data, publicationType, indexingType 
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="year" />
               <YAxis />
-              <ChartTooltip />
+              <Tooltip />
               <Legend />
-              {barDataKeys.map((item, index) => (
-                <Bar
-                  key={item.dataKey}
-                  dataKey={item.dataKey}
-                  name={item.name}
-                  fill={item.color}
-                  radius={[4, 4, 0, 0]}
-                  barSize={15}
-                >
-                  <LabelList dataKey={item.dataKey} position="center" fill="#fff" fontSize={10} />
-                </Bar>
-              ))}
+
+              {shouldShowByType ? (
+                // Show publication types
+                <>
+                  <Bar dataKey="journal" name="Journal" fill={TYPE_COLORS.journal} radius={[4, 4, 0, 0]} barSize={15}>
+                    <LabelList dataKey="journal" position="center" fill="#fff" fontSize={10} />
+                  </Bar>
+                  <Bar
+                    dataKey="conference"
+                    name="Conference"
+                    fill={TYPE_COLORS.conference}
+                    radius={[4, 4, 0, 0]}
+                    barSize={15}
+                  >
+                    <LabelList dataKey="conference" position="center" fill="#fff" fontSize={10} />
+                  </Bar>
+                  <Bar dataKey="book" name="Book" fill={TYPE_COLORS.book} radius={[4, 4, 0, 0]} barSize={15}>
+                    <LabelList dataKey="book" position="center" fill="#fff" fontSize={10} />
+                  </Bar>
+                  <Bar
+                    dataKey="bookChapter"
+                    name="Book Chapter"
+                    fill={TYPE_COLORS.bookChapter}
+                    radius={[4, 4, 0, 0]}
+                    barSize={15}
+                  >
+                    <LabelList dataKey="bookChapter" position="center" fill="#fff" fontSize={10} />
+                  </Bar>
+                </>
+              ) : (
+                // Show indexing types for the selected publication type
+                <>
+                  <Bar dataKey="sci" name="SCI(E)" fill={INDEXING_COLORS.sci} radius={[4, 4, 0, 0]} barSize={15}>
+                    <LabelList dataKey="sci" position="center" fill="#fff" fontSize={10} />
+                  </Bar>
+                  <Bar dataKey="scopus" name="Scopus" fill={INDEXING_COLORS.scopus} radius={[4, 4, 0, 0]} barSize={15}>
+                    <LabelList dataKey="scopus" position="center" fill="#fff" fontSize={10} />
+                  </Bar>
+                  <Bar dataKey="esci" name="ESCI" fill={INDEXING_COLORS.esci} radius={[4, 4, 0, 0]} barSize={15}>
+                    <LabelList dataKey="esci" position="center" fill="#fff" fontSize={10} />
+                  </Bar>
+                  <Bar dataKey="other" name="Other" fill={INDEXING_COLORS.other} radius={[4, 4, 0, 0]} barSize={15}>
+                    <LabelList dataKey="other" position="center" fill="#fff" fontSize={10} />
+                  </Bar>
+                </>
+              )}
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -264,12 +291,26 @@ export default function PublicationsChart({ data, publicationType, indexingType 
                 fill="#8884d8"
                 dataKey="value"
               >
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
+                {pieData.map((entry, index) => {
+                  let color
+                  if (shouldShowByType) {
+                    // Use type colors
+                    if (entry.name === "Journal") color = TYPE_COLORS.journal
+                    else if (entry.name === "Conference") color = TYPE_COLORS.conference
+                    else if (entry.name === "Book") color = TYPE_COLORS.book
+                    else if (entry.name === "Book Chapter") color = TYPE_COLORS.bookChapter
+                  } else {
+                    // Use indexing colors
+                    if (entry.name === "SCI(E)") color = INDEXING_COLORS.sci
+                    else if (entry.name === "Scopus") color = INDEXING_COLORS.scopus
+                    else if (entry.name === "ESCI") color = INDEXING_COLORS.esci
+                    else if (entry.name === "Other") color = INDEXING_COLORS.other
+                  }
+                  return <Cell key={`cell-${index}`} fill={color || COLORS[index % COLORS.length]} />
+                })}
               </Pie>
               <Legend />
-              <ChartTooltip />
+              <Tooltip />
             </PieChart>
           </ResponsiveContainer>
         )}
@@ -288,20 +329,90 @@ export default function PublicationsChart({ data, publicationType, indexingType 
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="year" />
               <YAxis />
-              <ChartTooltip />
+              <Tooltip />
               <Legend />
-              {barDataKeys.map((item) => (
-                <Line
-                  key={item.dataKey}
-                  type="monotone"
-                  dataKey={item.dataKey}
-                  name={item.name}
-                  stroke={item.color}
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              ))}
+
+              {shouldShowByType ? (
+                // Show publication types
+                <>
+                  <Line
+                    type="monotone"
+                    dataKey="journal"
+                    name="Journal"
+                    stroke={TYPE_COLORS.journal}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="conference"
+                    name="Conference"
+                    stroke={TYPE_COLORS.conference}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="book"
+                    name="Book"
+                    stroke={TYPE_COLORS.book}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="bookChapter"
+                    name="Book Chapter"
+                    stroke={TYPE_COLORS.bookChapter}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </>
+              ) : (
+                // Show indexing types for the selected publication type
+                <>
+                  <Line
+                    type="monotone"
+                    dataKey="sci"
+                    name="SCI(E)"
+                    stroke={INDEXING_COLORS.sci}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="scopus"
+                    name="Scopus"
+                    stroke={INDEXING_COLORS.scopus}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="esci"
+                    name="ESCI"
+                    stroke={INDEXING_COLORS.esci}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="other"
+                    name="Other"
+                    stroke={INDEXING_COLORS.other}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </>
+              )}
             </LineChart>
           </ResponsiveContainer>
         )}

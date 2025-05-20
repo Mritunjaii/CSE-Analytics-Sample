@@ -36,7 +36,7 @@ export default function Dashboard() {
   const [patentStatus, setPatentStatus] = useState("all")
   const [selectedFaculty, setSelectedFaculty] = useState<number | null>(null)
   const [publicationType, setPublicationType] = useState("all")
-  const [indexingType, setIndexingType] = useState("all")
+  const [publicationIndexing, setPublicationIndexing] = useState("all")
   const [eventType, setEventType] = useState("all")
 
   // Find min and max funding values for the slider
@@ -50,10 +50,10 @@ export default function Dashboard() {
       const yearMatch = item.year >= startYear && item.year <= endYear
       const facultyMatch = selectedFaculty ? item.facultyIds.includes(selectedFaculty) : true
       const typeMatch = publicationType === "all" ? true : item.type === publicationType
-      const indexingMatch = indexingType === "all" || item.type !== "journal" ? true : item.indexing === indexingType
+      const indexingMatch = publicationIndexing === "all" ? true : item.indexing === publicationIndexing
       return yearMatch && facultyMatch && typeMatch && indexingMatch
     })
-  }, [startYear, endYear, selectedFaculty, publicationType, indexingType])
+  }, [startYear, endYear, selectedFaculty, publicationType, publicationIndexing])
 
   const filteredProjects = useMemo(() => {
     return projectsData.filter((item) => {
@@ -85,9 +85,6 @@ export default function Dashboard() {
 
   // Get faculty name for display
   const facultyName = selectedFaculty ? facultyData.find((f) => f.id === selectedFaculty)?.name : "All Faculty"
-
-  // Show indexing filter only when journal is selected
-  const showIndexingFilter = publicationType === "journal"
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -166,8 +163,7 @@ export default function Dashboard() {
                       onValueChange={(value) => {
                         if (value) {
                           setPublicationType(value)
-                          // Reset indexing type when changing publication type
-                          setIndexingType("all")
+                          setPublicationIndexing("all")
                         }
                       }}
                     >
@@ -187,59 +183,36 @@ export default function Dashboard() {
                         Chapter
                       </ToggleGroupItem>
                     </ToggleGroup>
-
-                    {showIndexingFilter && (
-                      <div className="mt-2">
-                        <h2 className="text-sm font-medium mb-2 text-gray-500 dark:text-gray-400">Journal Indexing</h2>
-                        <ToggleGroup
-                          type="single"
-                          value={indexingType}
-                          onValueChange={(value) => value && setIndexingType(value)}
-                        >
-                          <ToggleGroupItem value="all" aria-label="All indexing">
-                            All
-                          </ToggleGroupItem>
-                          <ToggleGroupItem value="sci" aria-label="SCI(E) indexed">
-                            SCI(E)
-                          </ToggleGroupItem>
-                          <ToggleGroupItem value="scopus" aria-label="Scopus indexed">
-                            Scopus
-                          </ToggleGroupItem>
-                          <ToggleGroupItem value="esci" aria-label="ESCI indexed">
-                            ESCI
-                          </ToggleGroupItem>
-                          <ToggleGroupItem value="other" aria-label="Other indexing">
-                            Other
-                          </ToggleGroupItem>
-                        </ToggleGroup>
-                      </div>
-                    )}
                   </div>
 
-                  <div>
-                    <h2 className="text-sm font-medium mb-2 text-gray-500 dark:text-gray-400">Event Type</h2>
-                    <ToggleGroup
-                      type="single"
-                      value={eventType}
-                      onValueChange={(value) => value && setEventType(value)}
-                    >
-                      <ToggleGroupItem value="all" aria-label="All events">
-                        All
-                      </ToggleGroupItem>
-                      <ToggleGroupItem value="conference" aria-label="Conference events">
-                        Conf.
-                      </ToggleGroupItem>
-                      <ToggleGroupItem value="stc" aria-label="STC/E-STC events">
-                        STC
-                      </ToggleGroupItem>
-                      <ToggleGroupItem value="workshop" aria-label="Workshop/FDP events">
-                        Workshop
-                      </ToggleGroupItem>
-                      <ToggleGroupItem value="gian" aria-label="GIAN events">
-                        GIAN
-                      </ToggleGroupItem>
-                    </ToggleGroup>
-                  </div>
+                  {publicationType !== "all" && (
+                    <div>
+                      <h2 className="text-sm font-medium mb-2 text-gray-500 dark:text-gray-400">
+                        Publication Indexing
+                      </h2>
+                      <ToggleGroup
+                        type="single"
+                        value={publicationIndexing}
+                        onValueChange={(value) => value && setPublicationIndexing(value)}
+                      >
+                        <ToggleGroupItem value="all" aria-label="All indexing">
+                          All
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="sci" aria-label="SCI(E) indexed">
+                          SCI(E)
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="scopus" aria-label="Scopus indexed">
+                          Scopus
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="esci" aria-label="ESCI indexed">
+                          ESCI
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="other" aria-label="Other indexing">
+                          Other
+                        </ToggleGroupItem>
+                      </ToggleGroup>
+                    </div>
+                  )}
 
                   <div>
                     <h2 className="text-sm font-medium mb-2 text-gray-500 dark:text-gray-400">Project Status</h2>
@@ -278,6 +251,31 @@ export default function Dashboard() {
                       </ToggleGroupItem>
                     </ToggleGroup>
                   </div>
+
+                  <div>
+                    <h2 className="text-sm font-medium mb-2 text-gray-500 dark:text-gray-400">Event Type</h2>
+                    <ToggleGroup
+                      type="single"
+                      value={eventType}
+                      onValueChange={(value) => value && setEventType(value)}
+                    >
+                      <ToggleGroupItem value="all" aria-label="All events">
+                        All
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="conference" aria-label="Conference events">
+                        Conf.
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="stc" aria-label="STC/E-STC events">
+                        STC
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="workshop" aria-label="Workshop/FDP events">
+                        W/FDP
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="gian" aria-label="GIAN events">
+                        GIAN
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
                 </div>
               </TabsContent>
 
@@ -311,11 +309,7 @@ export default function Dashboard() {
               <CardTitle>{selectedFaculty ? `${facultyName}'s Publications` : "Research Publications"}</CardTitle>
             </CardHeader>
             <CardContent>
-              <PublicationsChart
-                data={filteredPublications}
-                publicationType={publicationType}
-                indexingType={indexingType}
-              />
+              <PublicationsChart data={filteredPublications} publicationType={publicationType} />
             </CardContent>
           </Card>
 
@@ -328,7 +322,7 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ProjectsChart data={filteredProjects} />
+              <ProjectsChart data={filteredProjects} projectStatus={projectStatus} />
             </CardContent>
           </Card>
 
@@ -337,7 +331,7 @@ export default function Dashboard() {
               <CardTitle>{selectedFaculty ? `${facultyName}'s Patents` : "Patents Filed/Granted"}</CardTitle>
             </CardHeader>
             <CardContent>
-              <PatentsChart data={filteredPatents} />
+              <PatentsChart data={filteredPatents} patentStatus={patentStatus} />
             </CardContent>
           </Card>
 
